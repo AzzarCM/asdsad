@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.pokemon_list_fragment.*
+import kotlinx.android.synthetic.main.pokemon_list_fragment.view.*
 import me.nelsoncastro.pokeapi.AppConstants
 import me.nelsoncastro.pokeapi.Pojos.Pokemon
 import me.nelsoncastro.pokeapi.R
@@ -21,7 +22,7 @@ import me.nelsoncastro.pokeapi.adapters.PokemonSimpleListAdapter
 import me.nelsoncastro.pokeapi.pokeAdapter
 import java.lang.RuntimeException
 
-class MainListFragment : Fragment() {
+class MainListFragment : android.support.v4.app.Fragment() {
 
     private lateinit var pokemons : ArrayList<Pokemon>
     private lateinit var pokeAdapter: pokeAdapter
@@ -36,7 +37,7 @@ class MainListFragment : Fragment() {
     }
 
     interface SearchNewPokemonListener{
-        fun searchPokemon(pokemonName:String)
+        fun searchPokemonType(pokemonName:String)
 
         fun managePortraitItemClick(pokemon: Pokemon)
 
@@ -56,26 +57,28 @@ class MainListFragment : Fragment() {
         return view
     }
 
-    fun initSearchButton(view: View?) {
-        listenerTool?.searchPokemon(searchbar.text.toString())
+    fun initSearchButton(view: View?) { searchbarbutton.setOnClickListener {
+        listenerTool?.searchPokemonType(searchbar.text.toString())
+    }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    fun initRecyclerView(orientation: Int, container: View?) {
+
+    fun initRecyclerView(orientation: Int, container: View) {
         val linearLayoutManager = LinearLayoutManager(this.context)
 
         if(orientation == Configuration.ORIENTATION_PORTRAIT){
             pokeAdapter = PokemonAdapter(pokemons, {pokemon: Pokemon -> listenerTool?.managePortraitItemClick(pokemon)})
-            container.apply { rv_pokemon_list.adapter = pokeAdapter as PokemonAdapter }
+            container.rv_pokemon_list.adapter = pokeAdapter as PokemonAdapter
+
         }
         if(orientation == Configuration.ORIENTATION_LANDSCAPE){
             pokeAdapter = PokemonSimpleListAdapter(pokemons, {pokemon: Pokemon -> listenerTool?.manageLandScapeItemClick(pokemon) })
-            container.apply { rv_pokemon_list.adapter = pokeAdapter as PokemonSimpleListAdapter }
+            container.rv_pokemon_list.adapter = pokeAdapter as PokemonSimpleListAdapter
         }
-        container.apply{rv_pokemon_list.apply {
+        container.rv_pokemon_list.apply {
             setHasFixedSize(true)
             layoutManager = linearLayoutManager
-        }}
+        }
     }
     fun updatePokemonAdapter(pokemonList : ArrayList<Pokemon>){
         pokeAdapter.changeDataSet(pokemonList)
@@ -91,8 +94,8 @@ class MainListFragment : Fragment() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-        outState?.putParcelableArrayList(AppConstants.MAIN_LIST_KEY, pokemons)
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelableArrayList(AppConstants.MAIN_LIST_KEY, pokemons)
         super.onSaveInstanceState(outState)
     }
 

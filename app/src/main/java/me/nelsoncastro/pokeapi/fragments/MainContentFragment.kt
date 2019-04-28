@@ -11,7 +11,7 @@ import kotlinx.android.synthetic.main.main_content_fragment_layout.*
 import me.nelsoncastro.pokeapi.Pojos.Pokemon
 import me.nelsoncastro.pokeapi.R
 
-class MainContentFragment : Fragment(){
+class MainContentFragment : android.support.v4.app.Fragment(){
 
     var pokemon = Pokemon()
 
