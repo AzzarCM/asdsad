@@ -32,16 +32,16 @@ class MainContentFragment : android.support.v4.app.Fragment(){
         return view
     }
 
-    fun bindData(view: View?) {
-        view!!.tv_pokemon_name.text = pokemon.name
+    fun bindData(view: View) {
+        view.tv_pokemon_name.text = pokemon.name
         view.tv_pokemon_id.text = pokemon.id
         view.tv_pokemon_type.text = pokemon.peso
-        /*
+
         Glide.with(view)
             .load(pokemon.Image)
             .placeholder(R.drawable.ic_pokemon_go)
-            .into(tv_pokemon_img)
-*/
+            .into(view.tv_pokemon_img)
+
     }
 
 }
