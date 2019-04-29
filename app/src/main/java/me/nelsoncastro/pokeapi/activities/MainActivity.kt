@@ -1,28 +1,24 @@
 package me.nelsoncastro.pokeapi.activities
 
-import android.app.Fragment
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.AsyncTask
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v4.app.FragmentManager
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.widget.Toast
-import com.google.gson.Gson
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.pokemon_list_fragment.*
 import me.nelsoncastro.pokeapi.AppConstants
-import me.nelsoncastro.pokeapi.adapters.PokemonAdapter
 import me.nelsoncastro.pokeapi.R
 import me.nelsoncastro.pokeapi.Pojos.Pokemon
+import me.nelsoncastro.pokeapi.Pojos.PokemonExtraInfo
 import me.nelsoncastro.pokeapi.fragments.MainContentFragment
 import me.nelsoncastro.pokeapi.fragments.MainListFragment
 import me.nelsoncastro.pokeapi.utilities.NetworkUtils
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import java.net.URL
 
 
 class MainActivity : AppCompatActivity(), MainListFragment.SearchNewPokemonListener{
@@ -36,8 +32,7 @@ class MainActivity : AppCompatActivity(), MainListFragment.SearchNewPokemonListe
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         pokemonList = savedInstanceState?.getParcelableArrayList(AppConstants.datase_savinstance_key) ?: ArrayList()
-        FetchPokemonTask().execute("")
-
+        FetchPokemonTask().execute()
         initMainFragment()
     }
 
@@ -51,7 +46,7 @@ class MainActivity : AppCompatActivity(), MainListFragment.SearchNewPokemonListe
         val resource = if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
             R.id.main_fragment
         else{
-            mainContentFragment = MainContentFragment.newInstance(Pokemon())
+            mainContentFragment = MainContentFragment.newInstance(PokemonExtraInfo())
             changeFragment(R.id.land_main_cont_fragment, mainContentFragment)
             R.id.land_main_fragment
         }
@@ -59,8 +54,9 @@ class MainActivity : AppCompatActivity(), MainListFragment.SearchNewPokemonListe
         changeFragment(resource, mainFragment)
 
     }
-    fun addPokemonToList(movie: Pokemon) {
-        pokemonList.add(movie)
+
+    fun addPokemonToList(pokemon: Pokemon) {
+        pokemonList.add(pokemon)
         mainFragment.updatePokemonAdapter(pokemonList)
         Log.d("Number", pokemonList.size.toString())
     }
@@ -68,8 +64,9 @@ class MainActivity : AppCompatActivity(), MainListFragment.SearchNewPokemonListe
 
     override fun searchPokemonType(pokemonType: String){
         FetchPokemonTask().execute(pokemonType)
+        mainFragment.updatePokemonAdapter(pokemonList)
     }
-    override fun managePortraitItemClick(pokemon: Pokemon) {
+    override fun managePortraitItemClick(pokemon: PokemonExtraInfo) {
         val pokemonBundle = Bundle()
         pokemonBundle.putParcelable("POKEMON", pokemon)
         startActivity(Intent(this, PokemonViewer::class.java).putExtras(pokemonBundle))
@@ -79,7 +76,7 @@ class MainActivity : AppCompatActivity(), MainListFragment.SearchNewPokemonListe
         supportFragmentManager.beginTransaction().replace(id, frag).commit()
     }
 
-    override fun manageLandScapeItemClick(pokemon: Pokemon) {
+    override fun manageLandScapeItemClick(pokemon: PokemonExtraInfo) {
         mainContentFragment = MainContentFragment.newInstance(pokemon)
         changeFragment(R.id.land_main_cont_fragment, mainContentFragment)
     }
@@ -90,63 +87,60 @@ class MainActivity : AppCompatActivity(), MainListFragment.SearchNewPokemonListe
     }
 */
     private inner class FetchPokemonTask : AsyncTask<String, Void, String>() {
+        var flag = false
+        override fun doInBackground(vararg params: String): String {
+            var typePokemon: String = ""
+            if (!params.isNullOrEmpty()) {
+                flag = true
+                typePokemon = params[0]
+            }
 
-        override fun doInBackground(vararg query: String): String {
-
-            if (query.isNullOrEmpty()) return ""
-
-            val ID = query[0]
-            val pokeAPI = NetworkUtils().buildUrl("pokemon",ID)
-
+            // val pokemonName = params[0]
+            val pokemonUrl = if (!flag) {
+                NetworkUtils().buildtSearchUrl(typePokemon)
+            } else {
+                URL((Uri.parse("https://pokeapi.co/api/v2/type").buildUpon().appendPath(typePokemon)).toString())
+            }
+            Log.v("http a", pokemonUrl.toString())
             return try {
-                NetworkUtils().getResponseFromHttpUrl(pokeAPI)
+                NetworkUtils().getResponseFromHttpUrl(pokemonUrl)
             } catch (e: IOException) {
-                e.printStackTrace()
                 ""
             }
-
         }
-        /*
 
-        override fun onPostExecute(pokemonInfo: String) {
-            val pokemon = if (!pokemonInfo.isEmpty()) {
-                val root = JSONObject(pokemonInfo)
-                val results = root.getJSONArray("results")
-                MutableList(20) { i ->
-                    val result = JSONObject(results[i].toString())
-                    Pokemon(i,
-                        result.getString("name").capitalize(),
-                        R.string.n_a_value.toString(),
-                        R.string.n_a_value.toString(),
-                        R.string.n_a_value.toString(),
-                        R.string.n_a_value.toString(),
-                        result.getString("url"),
-                        R.string.n_a_value.toString())
-                }
-            } else {
-                MutableList(20) { i ->
-                    Pokemon(i, R.string.n_a_value.toString(), R.string.n_a_value.toString(), R.string.n_a_value.toString(),
-                        R.string.n_a_value.toString(), R.string.n_a_value.toString(), R.string.n_a_value.toString(), R.string.n_a_value.toString())
-                }
-            }
-            initRecycler(pokemon)
-        }*/
         override fun onPostExecute(pokemonInfo: String) {
             super.onPostExecute(pokemonInfo)
+
             if (!pokemonInfo.isEmpty()) {
-                val movieJson = JSONObject(pokemonInfo)
-                if (movieJson.getString("Response") == "True") {
-                    val pokemon = Gson().fromJson<Pokemon>(pokemonInfo, Pokemon::class.java)
-                    addPokemonToList(pokemon)
-                } else {
-                    Toast.makeText(this@MainActivity, "No existe en la base de datos,", Toast.LENGTH_LONG).show()
+                val pokemonJSON: JSONArray
+                if (!flag) {
+                    pokemonJSON= JSONObject(pokemonInfo).getJSONArray("results")
+                    for (i in 0 until pokemonJSON.length()) {
+
+                        val obj = pokemonJSON.getJSONObject(i)
+                        var id = obj.getString("url").substring(34, (obj.getString("url").length - 1))
+                        val pokemon = Pokemon(id, obj.getString("name"), obj.getString("url"))
+                        pokemonList.add(pokemon)
+                    }
+                }else{
+                    pokemonList.clear()
+                    pokemonJSON=JSONObject(pokemonInfo).getJSONArray("pokemon")
+                    for (i in 0 until pokemonJSON.length()) {
+
+                        val obj = pokemonJSON.getJSONObject(i)
+                        var id = obj.getJSONObject("pokemon").getString("url").substring(34, (obj.getJSONObject("pokemon").getString("url").length - 1))
+                        val pokemon = Pokemon(id, obj.getJSONObject("pokemon").getString("name"), obj.getJSONObject("pokemon").getString("url"))
+                        pokemonList.add(pokemon)
+                    }
                 }
-            }else
-            {
+            } else {
                 Toast.makeText(this@MainActivity, "A ocurrido un error,", Toast.LENGTH_LONG).show()
             }
         }
     }
+
+
 
 
 }

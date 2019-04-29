@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.list_element_pokemon.view.*
 import me.nelsoncastro.pokeapi.Pojos.Pokemon
+import me.nelsoncastro.pokeapi.Pojos.PokemonExtraInfo
 import me.nelsoncastro.pokeapi.R
 import me.nelsoncastro.pokeapi.pokeAdapter
 import me.nelsoncastro.pokeapi.utilities.NetworkUtils
@@ -16,7 +17,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.URL
 
-class PokemonSimpleListAdapter(var items: List<Pokemon>, val clickListener: (Pokemon) -> Unit): RecyclerView.Adapter<PokemonSimpleListAdapter.ViewHolder>(), pokeAdapter {
+class PokemonSimpleListAdapter(var items: List<Pokemon>, val clickListener: (PokemonExtraInfo) -> Unit): RecyclerView.Adapter<PokemonSimpleListAdapter.ViewHolder>(), pokeAdapter {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(items[position], clickListener)
@@ -35,18 +36,18 @@ class PokemonSimpleListAdapter(var items: List<Pokemon>, val clickListener: (Pok
     override fun getItemCount() = items.size
 
     class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView){
-        private lateinit var pokemonBase:Pokemon
-        fun bind(item: Pokemon, clickListener: (Pokemon) -> Unit) = with(itemView) {
-            tv_pokemon_id.text = item.id.toString()
+        private lateinit var pokemonBase:PokemonExtraInfo
+        fun bind(item: Pokemon, clickListener: (PokemonExtraInfo) -> Unit) = with(itemView) {
+            tv_pokemon_id.text = item.id
             tv_pokemon_name.text = item.name
             tv_pokemon_type.text = item.url
             Glide.with(itemView.context)
-                .load(item.sprite)
+                .load("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + item.id + ".png")
                 .placeholder(R.drawable.ic_launcher_background)
                 .into(tv_pokemon_img)
             FetchPokemon().execute(item.url)
 
-            this.setOnClickListener { clickListener(item) }
+            this.setOnClickListener { clickListener(pokemonBase) }
         }
         private inner class FetchPokemon : AsyncTask<String, Void, String>() {
             override fun doInBackground(vararg params: String?): String {
@@ -65,8 +66,8 @@ class PokemonSimpleListAdapter(var items: List<Pokemon>, val clickListener: (Pok
                 super.onPostExecute(pokemonInfo)
                 if (!pokemonInfo.isEmpty()) {
                     val PokemonJson = JSONObject(pokemonInfo)
-                    pokemonBase = Pokemon(PokemonJson.getInt("id"), PokemonJson.getString("name"), PokemonJson.getString("type"),
-                        PokemonJson.getString("type"), PokemonJson.getString("weight"), PokemonJson.getJSONObject("height").getString("sprites"))
+                    pokemonBase = PokemonExtraInfo(PokemonJson.getString("id"), PokemonJson.getString("name"), PokemonJson.getString("weight"),
+                        PokemonJson.getString("height"), PokemonJson.getString("base_experience"), PokemonJson.getJSONObject("sprites").getString("front_default"))
                 }
             }
         }

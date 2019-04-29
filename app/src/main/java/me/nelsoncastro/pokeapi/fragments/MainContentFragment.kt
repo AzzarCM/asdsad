@@ -9,14 +9,15 @@ import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.list_element_pokemon.view.*
 import kotlinx.android.synthetic.main.main_content_fragment_layout.*
 import me.nelsoncastro.pokeapi.Pojos.Pokemon
+import me.nelsoncastro.pokeapi.Pojos.PokemonExtraInfo
 import me.nelsoncastro.pokeapi.R
 
 class MainContentFragment : android.support.v4.app.Fragment(){
 
-    var pokemon = Pokemon()
+    var pokemon = PokemonExtraInfo()
 
     companion object {
-        fun newInstance(pokemon: Pokemon): MainContentFragment{
+        fun newInstance(pokemon: PokemonExtraInfo): MainContentFragment{
             val newFragment = MainContentFragment()
             newFragment.pokemon = pokemon
             return newFragment
@@ -31,13 +32,16 @@ class MainContentFragment : android.support.v4.app.Fragment(){
         return view
     }
 
-    fun bindData(view: View) {
-        view.tv_pokemon_name.text = pokemon.name
-        view.tv_pokemon_id.text = pokemon.id.toString()
-        view.tv_pokemon_type.text = pokemon.fsttype
-        Glide.with(view).load(pokemon.sprite)
+    fun bindData(view: View?) {
+        view!!.tv_pokemon_name.text = pokemon.name
+        view.tv_pokemon_id.text = pokemon.id
+        view.tv_pokemon_type.text = pokemon.peso
+        /*
+        Glide.with(view)
+            .load(pokemon.Image)
             .placeholder(R.drawable.ic_pokemon_go)
             .into(tv_pokemon_img)
+*/
     }
 
 }

@@ -15,6 +15,7 @@ import kotlinx.android.synthetic.main.pokemon_list_fragment.*
 import kotlinx.android.synthetic.main.pokemon_list_fragment.view.*
 import me.nelsoncastro.pokeapi.AppConstants
 import me.nelsoncastro.pokeapi.Pojos.Pokemon
+import me.nelsoncastro.pokeapi.Pojos.PokemonExtraInfo
 import me.nelsoncastro.pokeapi.R
 import me.nelsoncastro.pokeapi.adapters.PokemonAdapter
 import me.nelsoncastro.pokeapi.adapters.PokemonSimpleListAdapter
@@ -39,9 +40,9 @@ class MainListFragment : android.support.v4.app.Fragment() {
     interface SearchNewPokemonListener{
         fun searchPokemonType(pokemonName:String)
 
-        fun managePortraitItemClick(pokemon: Pokemon)
+        fun managePortraitItemClick(pokemon: PokemonExtraInfo)
 
-        fun manageLandScapeItemClick(pokemon: Pokemon)
+        fun manageLandScapeItemClick(pokemon: PokemonExtraInfo)
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -57,7 +58,7 @@ class MainListFragment : android.support.v4.app.Fragment() {
         return view
     }
 
-    fun initSearchButton(view: View?) { searchbarbutton.setOnClickListener {
+    fun initSearchButton(view: View) { view.searchbarbutton.setOnClickListener {
         listenerTool?.searchPokemonType(searchbar.text.toString())
     }
     }
@@ -67,12 +68,12 @@ class MainListFragment : android.support.v4.app.Fragment() {
         val linearLayoutManager = LinearLayoutManager(this.context)
 
         if(orientation == Configuration.ORIENTATION_PORTRAIT){
-            pokeAdapter = PokemonAdapter(pokemons, {pokemon: Pokemon -> listenerTool?.managePortraitItemClick(pokemon)})
+            pokeAdapter = PokemonAdapter(pokemons, {pokemon: PokemonExtraInfo -> listenerTool?.managePortraitItemClick(pokemon)})
             container.rv_pokemon_list.adapter = pokeAdapter as PokemonAdapter
 
         }
         if(orientation == Configuration.ORIENTATION_LANDSCAPE){
-            pokeAdapter = PokemonSimpleListAdapter(pokemons, {pokemon: Pokemon -> listenerTool?.manageLandScapeItemClick(pokemon) })
+            pokeAdapter = PokemonSimpleListAdapter(pokemons, {pokemon: PokemonExtraInfo -> listenerTool?.manageLandScapeItemClick(pokemon) })
             container.rv_pokemon_list.adapter = pokeAdapter as PokemonSimpleListAdapter
         }
         container.rv_pokemon_list.apply {

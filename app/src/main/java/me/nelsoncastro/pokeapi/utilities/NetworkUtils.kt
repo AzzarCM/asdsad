@@ -10,32 +10,25 @@ import java.util.*
 
 
 class NetworkUtils {
-    val POKEMON_API_BASE_URL = "https://pokeapi.co/api/v2/"
-    val POKEMON_INFO = "pokemon"
-    val POKEMON_TYPE = "type"
 
-    private val TAG = NetworkUtils::class.java.simpleName
+    val POKEMON_API_BASEURL = "https://pokeapi.co/api/v2/pokemon"
 
-    fun buildUrl(root: String, pokeID: String): URL {
-        val builtUri = Uri.parse(POKEMON_API_BASE_URL)
+    fun buildtSearchUrl(pokemonId: String) : URL {
+        val builtUri = Uri.parse(POKEMON_API_BASEURL)
             .buildUpon()
-            .appendPath(root)
-            .appendPath(pokeID)
+            .appendPath(pokemonId)
             .build()
-
-        val url = try {
+        return try {
             URL(builtUri.toString())
-        } catch (e: MalformedURLException) {
+
+        }catch (e : MalformedURLException){
             URL("")
         }
 
-        Log.d(TAG, "Built URI $url")
-
-        return url
     }
 
     @Throws(IOException::class)
-    fun getResponseFromHttpUrl(url: URL): String {
+    fun getResponseFromHttpUrl(url: URL):String{
         val urlConnection = url.openConnection() as HttpURLConnection
         try {
             val `in` = urlConnection.inputStream
@@ -44,13 +37,14 @@ class NetworkUtils {
             scanner.useDelimiter("\\A")
 
             val hasInput = scanner.hasNext()
-            return if (hasInput) {
+            return if(hasInput){
                 scanner.next()
-            } else {
+            }else{
                 ""
             }
-        } finally {
+        }finally {
             urlConnection.disconnect()
         }
     }
+
 }
